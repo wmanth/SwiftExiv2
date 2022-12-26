@@ -20,6 +20,11 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "exiv2",
+            exclude: [
+                "library/src/exiv2.cpp",
+                "library/src/actions.cpp",
+                "library/src/getopt.cpp",
+                "library/src/utils.cpp"],
             sources: [
                 "library/src",
                 "library/xmpsdk/src"],
