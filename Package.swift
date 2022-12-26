@@ -19,7 +19,7 @@ let package = Package(
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
-            name: "exiv2",
+            name: "exiv2lib",
             exclude: [
                 "library/src/exiv2.cpp",
                 "library/src/actions.cpp",
@@ -31,10 +31,16 @@ let package = Package(
             cxxSettings: [
                 .headerSearchPath("library/include"),
                 .headerSearchPath("library/include/exiv2"),
-                .headerSearchPath("library/xmpsdk/include")]),
+                .headerSearchPath("library/xmpsdk/include"),
+                .unsafeFlags(["-Wno-shorten-64-to-32"])]),
+        .target(
+            name: "Exiv2",
+            dependencies: ["exiv2lib"],
+            cxxSettings: [
+                .headerSearchPath("../exiv2lib/library/include")]),
         .target(
             name: "SwiftExiv2",
-            dependencies: ["exiv2"]),
+            dependencies: ["Exiv2"]),
         .testTarget(
             name: "SwiftExiv2Tests",
             dependencies: ["SwiftExiv2"],
