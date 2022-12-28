@@ -9,7 +9,7 @@ let package = Package(
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "SwiftExiv2",
-            targets: ["SwiftExiv2"]),
+            targets: ["Exiv2"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -29,21 +29,20 @@ let package = Package(
                 "library/src",
                 "library/xmpsdk/src"],
             cxxSettings: [
-                .headerSearchPath("library/include"),
                 .headerSearchPath("library/include/exiv2"),
                 .headerSearchPath("library/xmpsdk/include"),
-                .unsafeFlags(["-Wno-shorten-64-to-32"])]),
+                .unsafeFlags([
+                    "-Wno-shorten-64-to-32",
+                    "-Wno-unused-command-line-argument"])]),
         .target(
             name: "Exiv2",
             dependencies: ["exiv2lib"],
             cxxSettings: [
                 .headerSearchPath("../exiv2lib/library/include")]),
-        .target(
-            name: "SwiftExiv2",
-            dependencies: ["Exiv2"]),
         .testTarget(
             name: "SwiftExiv2Tests",
-            dependencies: ["SwiftExiv2"],
+            dependencies: ["Exiv2"],
+            resources: [.copy("Assets")],
             linkerSettings: [
                 .linkedLibrary("expat"),
                 .linkedLibrary("iconv"),
