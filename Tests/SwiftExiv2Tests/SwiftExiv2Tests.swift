@@ -37,9 +37,11 @@ final class SwiftExiv2Tests: XCTestCase {
 
         let lat = image.getLatitude()
         let lon = image.getLongitude()
+        let altitude = image.getAltitude()
 
         XCTAssertNil(lat)
         XCTAssertNil(lon)
+        XCTAssertNil(altitude)
     }
 
     func testSuccessToWriteLatLon() throws {
@@ -49,18 +51,23 @@ final class SwiftExiv2Tests: XCTestCase {
 
         let testLat = NSNumber(31.22896)
         let testLon = NSNumber(121.48022)
+        let testAltitude = NSNumber(1683.24)
 
         image.readMetadata()
         image.setLatitude(testLat)
         image.setLongitude(testLon)
+        image.setAltitude(testAltitude)
         image.writeMetadata()
 
         let result = Exiv2Image(path: destURL.path)
         result.readMetadata()
         if let lat = image.getLatitude(),
-           let lon = image.getLongitude() {
-            XCTAssertEqual(lat, testLat)
-            XCTAssertEqual(lon, testLon)
+           let lon = image.getLongitude(),
+           let altitude = image.getAltitude() {
+            XCTAssertEqual(lat.floatValue, testLat.floatValue, accuracy: 0.0001)
+            XCTAssertEqual(lon.floatValue, testLon.floatValue, accuracy: 0.0001)
+            XCTAssertEqual(altitude.floatValue, testAltitude.floatValue, accuracy: 0.0001)
+
         } else {
             XCTFail()
         }
