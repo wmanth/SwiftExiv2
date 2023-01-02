@@ -9,6 +9,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)readMetadata;
 - (void)writeMetadata;
 
+- (nullable NSDateComponents *)getDateTimeModified;
+- (nullable NSDateComponents *)getDateTimeOriginal;
+- (nullable NSDateComponents *)getDateTimeDigitized;
+- (void)setDateTimeModified:(NSDateComponents *)dateTime;
+- (void)setDateTimeOriginal:(NSDateComponents *)dateTime;
+- (void)setDateTimeDigitized:(NSDateComponents *)dateTime;
+
 - (nullable NSNumber *)getLatitude;
 - (void)setLatitude:(NSNumber *)latitude;
 
