@@ -6,8 +6,16 @@ final class SwiftExiv2Tests: XCTestCase {
 
     private var temporaryDirectoryURL: URL!
 
-    private var testImageURL: URL! {
-        Bundle.module.url(forResource: "test",
+    // contains no EXIF data
+    private var test1ImageURL: URL! {
+        Bundle.module.url(forResource: "test1",
+                        withExtension: "jpg",
+                         subdirectory: "Assets")
+    }
+
+    // contains fill set of EXIF data
+    private var test2ImageURL: URL! {
+        Bundle.module.url(forResource: "test2",
                         withExtension: "jpg",
                          subdirectory: "Assets")
     }
@@ -31,8 +39,71 @@ final class SwiftExiv2Tests: XCTestCase {
         }
     }
 
-    func testFailToReadLatLon() throws {
+    func temporaryCopiedResource(_ sourceURL: URL) throws -> URL {
+        let destURL = temporaryDirectoryURL.appendingPathComponent(sourceURL.lastPathComponent)
+        try FileManager.default.copyItem(at: sourceURL, to: destURL)
+        return destURL
+    }
+
+    func testFailReadDateTimeOriginal() throws {
+        let image = Exiv2Image(path: test1ImageURL.path)
+        image.readMetadata()
+        let components = image.getDateTimeOriginal()
+        XCTAssertNil(components)
+    }
+
+    func testSuccessReadDateTimeOriginal() throws {
+        let image = Exiv2Image(path: test2ImageURL.path)
+        image.readMetadata()
+        NSLog("%@", image.description)
+        if let components = image.getDateTimeOriginal() {
+            XCTAssertEqual(components.year, 2022)
+            XCTAssertEqual(components.month, 12)
+            XCTAssertEqual(components.day, 20)
+            XCTAssertEqual(components.hour, 15)
+            XCTAssertEqual(components.minute, 45)
+            XCTAssertEqual(components.second, 39)
+        }
+        else {
+            XCTFail()
+        }
+    }
+
+    func testSuccessWriteDateTime() throws {
+        let testImageURL = try self.temporaryCopiedResource(test1ImageURL)
+
         let image = Exiv2Image(path: testImageURL.path)
+        image.readMetadata()
+        let testDateComponents = DateComponents(
+            calendar: Calendar(identifier: .iso8601),
+            timeZone: TimeZone(identifier: "CET"),
+            year: 2022,
+            month: 3,
+            day: 28,
+            hour: 9,
+            minute: 32,
+            second: 14)
+        image.setDateTimeOriginal(testDateComponents)
+        image.writeMetadata()
+
+        let result = Exiv2Image(path: testImageURL.path)
+        result.readMetadata()
+        if let dateComponents = result.getDateTimeOriginal() {
+            XCTAssertEqual(dateComponents.year,   testDateComponents.year)
+            XCTAssertEqual(dateComponents.month,  testDateComponents.month)
+            XCTAssertEqual(dateComponents.day,    testDateComponents.day)
+            XCTAssertEqual(dateComponents.hour,   testDateComponents.hour)
+            XCTAssertEqual(dateComponents.minute, testDateComponents.minute)
+            XCTAssertEqual(dateComponents.second, testDateComponents.second)
+            XCTAssertEqual(dateComponents.timeZone!.secondsFromGMT(), testDateComponents.timeZone!.secondsFromGMT())
+        }
+        else {
+            XCTFail()
+        }
+    }
+
+    func testFailToReadLatLon() throws {
+        let image = Exiv2Image(path: test1ImageURL.path)
         image.readMetadata()
 
         let lat = image.getLatitude()
@@ -44,10 +115,26 @@ final class SwiftExiv2Tests: XCTestCase {
         XCTAssertNil(altitude)
     }
 
+    func testSuccessToReadLatLon() throws {
+        let image = Exiv2Image(path: test2ImageURL.path)
+        image.readMetadata()
+
+        if let lat = image.getLatitude(),
+           let lon = image.getLongitude(),
+           let altitude = image.getAltitude() {
+
+            XCTAssertEqual(lat.floatValue, 30.0283, accuracy: 0.0001)
+            XCTAssertEqual(lon.floatValue, 118.9875, accuracy: 0.0001)
+            XCTAssertEqual(altitude.floatValue, 1158.7701, accuracy: 0.0001)
+        }
+        else {
+            XCTFail()
+        }
+    }
+
     func testSuccessToWriteLatLon() throws {
-        let destURL = temporaryDirectoryURL.appendingPathComponent(testImageURL.lastPathComponent)
-        try FileManager.default.copyItem(at: testImageURL, to: destURL)
-        let image = Exiv2Image(path: destURL.path)
+        let testImageURL = try self.temporaryCopiedResource(test1ImageURL)
+        let image = Exiv2Image(path: testImageURL.path)
 
         let testLat = NSNumber(31.22896)
         let testLon = NSNumber(121.48022)
@@ -59,7 +146,7 @@ final class SwiftExiv2Tests: XCTestCase {
         image.setAltitude(testAltitude)
         image.writeMetadata()
 
-        let result = Exiv2Image(path: destURL.path)
+        let result = Exiv2Image(path: testImageURL.path)
         result.readMetadata()
         if let lat = image.getLatitude(),
            let lon = image.getLongitude(),
