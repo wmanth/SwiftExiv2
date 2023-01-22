@@ -1,37 +1,41 @@
 #import "Categories.hpp"
 
+using namespace Exiv2;
+
 @implementation NSNumber (Exiv2)
 
-+ (nullable NSNumber *)fromURational:(const Exiv2::Value &)value
++ (nullable NSNumber *)fromURational:(const Value *)pValue
                             negative:(BOOL)negative
 {
+    if (!pValue) return nil;
+
     int sign = negative ? -1 : 1;
-    return [NSNumber numberWithFloat:value.toFloat() * sign];
+    return [NSNumber numberWithFloat:pValue->toFloat() * sign];
 }
 
-+ (nullable NSNumber *)fromDegMinSec:(const Exiv2::Value &)value
++ (nullable NSNumber *)fromDegMinSec:(const Value *)pValue
                             negative:(BOOL)negative
 {
-    if (value.count() != 3) return nil;
+    if (!pValue || pValue->count() != 3) return nil;
 
-    float deg = value.toFloat(0);
-    float min = value.toFloat(1);
-    float sec = value.toFloat(2);
+    float deg = pValue->toFloat(0);
+    float min = pValue->toFloat(1);
+    float sec = pValue->toFloat(2);
 
     int sign = negative ? -1 : 1;
     return [NSNumber numberWithFloat:sign * ((sec/60 + min)/60 + deg)];
 }
 
-- (Exiv2::Value::AutoPtr)toURationalWithDenominator:(int)denominator
+- (Value::AutoPtr)toURationalWithDenominator:(int)denominator
 {
-    Exiv2::URationalValue *result = new Exiv2::URationalValue();
-    result->value_.push_back(Exiv2::URational(abs(self.floatValue) * denominator, denominator));
-    return Exiv2::Value::AutoPtr(result);
+    auto *pValue = new URationalValue();
+    pValue->value_.push_back(URational(abs(self.floatValue * denominator), denominator));
+    return Value::AutoPtr(pValue);
 }
 
-- (Exiv2::Value::AutoPtr)toDegMinSec
+- (Value::AutoPtr)toDegMinSec
 {
-    double value = abs(self.doubleValue);
+    float value = abs(self.floatValue);
     int deg = (int)value;
         value -= deg;
         value *= 60;
@@ -40,12 +44,12 @@
         value *= 60;
     int sec = (int)(value * 1000);
 
-    Exiv2::URationalValue *result = new Exiv2::URationalValue();
-    result->value_.push_back(Exiv2::URational(deg, 1));
-    result->value_.push_back(Exiv2::URational(min, 1));
-    result->value_.push_back(Exiv2::URational(sec, 1000));
+    auto *pValue = new URationalValue();
+    pValue->value_.push_back(URational(deg, 1));
+    pValue->value_.push_back(URational(min, 1));
+    pValue->value_.push_back(URational(sec, 1000));
 
-    return Exiv2::Value::AutoPtr(result);
+    return Value::AutoPtr(pValue);
 }
 
 @end
@@ -54,8 +58,8 @@
 
 @implementation NSDate (Exiv2)
 
-+ (nullable NSDate *)fromDateValue:(const Exiv2::Value *)pDateTimeValue
-                     timeZoneValue:(const Exiv2::Value *)pTimeZoneValue
++ (nullable NSDate *)fromDateValue:(const Value *)pDateTimeValue
+                     timeZoneValue:(const Value *)pTimeZoneValue
 {
     if (!pDateTimeValue) return nil;
 
@@ -74,8 +78,8 @@
 
 @implementation NSDateComponents (Exiv2)
 
-+ (nullable NSDateComponents *)fromDateValue:(nullable const Exiv2::Value *)pDateTimeValue
-                               timeZoneValue:(nullable const Exiv2::Value *)pTimeZoneValue;
++ (nullable NSDateComponents *)fromDateValue:(nullable const Value *)pDateTimeValue
+                               timeZoneValue:(nullable const Value *)pTimeZoneValue;
 {
     if (!pDateTimeValue) return nil;
     
@@ -87,13 +91,12 @@
     return [calendar componentsInTimeZone:timeZone fromDate:date];
 }
 
-- (Exiv2::Value::AutoPtr)toValue
+- (Value::AutoPtr)toValue
 {
     NSString *dateTimeString = [NSString stringWithFormat:@"%04d:%02d:%02d %02d:%02d:%02d",
                                 (int)self.year, (int)self.month, (int)self.day,
                                 (int)self.hour, (int)self.minute, (int)self.second];
-    Exiv2::Value::AutoPtr value(new Exiv2::AsciiValue(dateTimeString.UTF8String));
-    return value;
+    return Value::AutoPtr(new AsciiValue(dateTimeString.UTF8String));
 }
 
 @end
@@ -102,7 +105,7 @@
 
 @implementation NSTimeZone (Exiv2)
 
-+ (nullable NSTimeZone *)fromValue:(const Exiv2::Value *)pValue
++ (nullable NSTimeZone *)fromValue:(const Value *)pValue
 {
     if (!pValue) return nil;
 
@@ -110,7 +113,7 @@
     return [NSTimeZone timeZoneWithName:timeZoneName];
 }
 
-- (Exiv2::Value::AutoPtr)toValue {
+- (Value::AutoPtr)toValue {
     NSInteger sec = [self secondsFromGMT];
     BOOL isNegative = (sec < 0);
     if (isNegative) sec = -sec;
@@ -118,7 +121,7 @@
     sec -= hour * 60 * 60;
     NSInteger min = sec / 60;
     NSString *str = [NSString stringWithFormat:@"%s%02ld:%02ld", isNegative ? "-" : "+", hour, min];
-    return Exiv2::Value::AutoPtr(new Exiv2::AsciiValue(str.UTF8String));
+    return Value::AutoPtr(new AsciiValue(str.UTF8String));
 }
 
 @end
