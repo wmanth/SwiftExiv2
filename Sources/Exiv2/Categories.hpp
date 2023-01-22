@@ -6,8 +6,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSNumber (Exiv2)
 
-+ (nullable NSNumber *)fromURational:(const Exiv2::Value &)value negative:(BOOL)negative;
-+ (nullable NSNumber *)fromDegMinSec:(const Exiv2::Value &)value negative:(BOOL)negative;
++ (nullable NSNumber *)fromURational:(const Exiv2::Value *)pValue negative:(BOOL)negative;
++ (nullable NSNumber *)fromDegMinSec:(const Exiv2::Value *)pValue negative:(BOOL)negative;
 
 - (Exiv2::Value::AutoPtr)toURationalWithDenominator:(int)denominator;
 - (Exiv2::Value::AutoPtr)toDegMinSec;
