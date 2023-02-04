@@ -4,25 +4,26 @@
 
 using namespace Exiv2;
 
-const ExifKey kImageDateTimeKey    = ExifKey("Exif.Image.DateTime");
+const std::string kImageDateTimeKey    = "Exif.Image.DateTime";
 
-const ExifKey kPhotoOffsetTimeKey           = ExifKey("Exif.Photo.OffsetTime");
-const ExifKey kPhotoDateTimeOriginalKey     = ExifKey("Exif.Photo.DateTimeOriginal");
-const ExifKey kPhotoDateTimeDigitizedKey    = ExifKey("Exif.Photo.DateTimeDigitized");
-const ExifKey kPhotoOffsetTimeOriginalKey   = ExifKey("Exif.Photo.OffsetTimeOriginal");
-const ExifKey kPhotoOffsetTimeDigitizedKey  = ExifKey("Exif.Photo.OffsetTimeDigitized");
+const std::string kPhotoOffsetTimeKey           = "Exif.Photo.OffsetTime";
+const std::string kPhotoDateTimeOriginalKey     = "Exif.Photo.DateTimeOriginal";
+const std::string kPhotoDateTimeDigitizedKey    = "Exif.Photo.DateTimeDigitized";
+const std::string kPhotoOffsetTimeOriginalKey   = "Exif.Photo.OffsetTimeOriginal";
+const std::string kPhotoOffsetTimeDigitizedKey  = "Exif.Photo.OffsetTimeDigitized";
 
-const ExifKey kGPSLatitudeKey      = ExifKey("Exif.GPSInfo.GPSLatitude");
-const ExifKey kGPSLatitudeRefKey   = ExifKey("Exif.GPSInfo.GPSLatitudeRef");
-const ExifKey kGPSLongitudeKey     = ExifKey("Exif.GPSInfo.GPSLongitude");
-const ExifKey kGPSLongitudeRefKey  = ExifKey("Exif.GPSInfo.GPSLongitudeRef");
-const ExifKey kGPSAltitudeKey      = ExifKey("Exif.GPSInfo.GPSAltitude");
-const ExifKey kGPSAltitudeRefKey   = ExifKey("Exif.GPSInfo.GPSAltitudeRef");
+const std::string kGPSLatitudeKey      = "Exif.GPSInfo.GPSLatitude";
+const std::string kGPSLatitudeRefKey   = "Exif.GPSInfo.GPSLatitudeRef";
+const std::string kGPSLongitudeKey     = "Exif.GPSInfo.GPSLongitude";
+const std::string kGPSLongitudeRefKey  = "Exif.GPSInfo.GPSLongitudeRef";
+const std::string kGPSAltitudeKey      = "Exif.GPSInfo.GPSAltitude";
+const std::string kGPSAltitudeRefKey   = "Exif.GPSInfo.GPSAltitudeRef";
 
 @implementation Exiv2Image
 
 - (instancetype)initWithPath:(NSString*)path {
     if (self = [super init]) {
+        _path = path;
         _image_ptr = ImageFactory::open(path.UTF8String);
     }
     return self;
@@ -36,14 +37,16 @@ const ExifKey kGPSAltitudeRefKey   = ExifKey("Exif.GPSInfo.GPSAltitudeRef");
     _image_ptr->writeMetadata();
 }
 
-- (Value::AutoPtr)valueForExifKey:(const ExifKey &)key {
+- (Value::AutoPtr)valueForExifKey:(const std::string &)keyName {
+    ExifKey key = ExifKey(keyName);
     auto exifData = _image_ptr->exifData();
     auto pos = exifData.findKey(key);
     if (pos == exifData.end()) return Value::AutoPtr();
     return pos->getValue();
 }
 
-- (void)setValue:(const Value *)pValue forExifKey:(const ExifKey &)key {
+- (void)setValue:(const Value *)pValue forExifKey:(const std::string &)keyName {
+    ExifKey key = ExifKey(keyName);
     auto& exifData = _image_ptr->exifData();
     auto pos = exifData.findKey(key);
     if (pos == exifData.end()) {
