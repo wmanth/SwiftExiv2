@@ -4,7 +4,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface Exiv2Image : NSObject
 
-- (instancetype)initWithPath:(NSString*)path;
+- (instancetype)initWithURL:(NSURL*)url;
 
 - (void)readMetadata;
 - (void)writeMetadata;
@@ -24,6 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSNumber *)getAltitude;
 - (void)setAltitude:(NSNumber *)altitude;
+
+@property (readonly) NSURL* url;
 
 @end
 
