@@ -21,10 +21,9 @@ const std::string kGPSAltitudeRefKey   = "Exif.GPSInfo.GPSAltitudeRef";
 
 @implementation Exiv2Image
 
-- (instancetype)initWithPath:(NSString*)path {
+- (instancetype)initWithURL:(NSURL*)url {
     if (self = [super init]) {
-        _path = path;
-        _image_ptr = ImageFactory::open(path.UTF8String);
+        _image_ptr = ImageFactory::open(url.path.UTF8String);
     }
     return self;
 }
