@@ -9,21 +9,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)readMetadata;
 - (void)writeMetadata;
 
-- (nullable NSDateComponents *)getDateTimeModified;
-- (nullable NSDateComponents *)getDateTimeOriginal;
-- (nullable NSDateComponents *)getDateTimeDigitized;
-- (void)setDateTimeModified:(NSDateComponents *)dateTime;
-- (void)setDateTimeOriginal:(NSDateComponents *)dateTime;
-- (void)setDateTimeDigitized:(NSDateComponents *)dateTime;
+@property (nullable) NSDateComponents* dateTimeModified;
+@property (nullable) NSDateComponents* dateTimeOriginal;
+@property (nullable) NSDateComponents* dateTimeDigitized;
 
-- (nullable NSNumber *)getLatitude;
-- (void)setLatitude:(NSNumber *)latitude;
-
-- (nullable NSNumber *)getLongitude;
-- (void)setLongitude:(NSNumber *)longitude;
-
-- (nullable NSNumber *)getAltitude;
-- (void)setAltitude:(NSNumber *)altitude;
+@property (nullable) NSNumber* latitude;
+@property (nullable) NSNumber* longitude;
+@property (nullable) NSNumber* altitude;
 
 @end
 
