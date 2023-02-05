@@ -48,15 +48,14 @@ final class SwiftExiv2Tests: XCTestCase {
     func testFailReadDateTimeOriginal() throws {
         let image = Exiv2Image(url: test1ImageURL)
         image.readMetadata()
-        let components = image.getDateTimeOriginal()
-        XCTAssertNil(components)
+        XCTAssertNil(image.dateTimeOriginal)
     }
 
     func testSuccessReadDateTimeOriginal() throws {
         let image = Exiv2Image(url: test2ImageURL)
         image.readMetadata()
         NSLog("%@", image.description)
-        if let components = image.getDateTimeOriginal() {
+        if let components = image.dateTimeOriginal {
             XCTAssertEqual(components.year, 2022)
             XCTAssertEqual(components.month, 12)
             XCTAssertEqual(components.day, 20)
@@ -83,12 +82,12 @@ final class SwiftExiv2Tests: XCTestCase {
             hour: 9,
             minute: 32,
             second: 14)
-        image.setDateTimeOriginal(testDateComponents)
+        image.dateTimeOriginal = testDateComponents
         image.writeMetadata()
 
         let result = Exiv2Image(url: testImageURL)
         result.readMetadata()
-        if let dateComponents = result.getDateTimeOriginal() {
+        if let dateComponents = result.dateTimeOriginal {
             XCTAssertEqual(dateComponents.year,   testDateComponents.year)
             XCTAssertEqual(dateComponents.month,  testDateComponents.month)
             XCTAssertEqual(dateComponents.day,    testDateComponents.day)
@@ -106,9 +105,9 @@ final class SwiftExiv2Tests: XCTestCase {
         let image = Exiv2Image(url: test1ImageURL)
         image.readMetadata()
 
-        let lat = image.getLatitude()
-        let lon = image.getLongitude()
-        let altitude = image.getAltitude()
+        let lat = image.latitude
+        let lon = image.longitude
+        let altitude = image.altitude
 
         XCTAssertNil(lat)
         XCTAssertNil(lon)
@@ -119,9 +118,9 @@ final class SwiftExiv2Tests: XCTestCase {
         let image = Exiv2Image(url: test2ImageURL)
         image.readMetadata()
 
-        if let lat = image.getLatitude(),
-           let lon = image.getLongitude(),
-           let altitude = image.getAltitude() {
+        if let lat = image.latitude,
+           let lon = image.longitude,
+           let altitude = image.altitude {
 
             XCTAssertEqual(lat.floatValue, 30.0283, accuracy: 0.0001)
             XCTAssertEqual(lon.floatValue, 118.9875, accuracy: 0.0001)
@@ -141,16 +140,16 @@ final class SwiftExiv2Tests: XCTestCase {
         let testAltitude = NSNumber(1683.24)
 
         image.readMetadata()
-        image.setLatitude(testLat)
-        image.setLongitude(testLon)
-        image.setAltitude(testAltitude)
+        image.latitude = testLat
+        image.longitude = testLon
+        image.altitude = testAltitude
         image.writeMetadata()
 
         let result = Exiv2Image(url: testImageURL)
         result.readMetadata()
-        if let lat = image.getLatitude(),
-           let lon = image.getLongitude(),
-           let altitude = image.getAltitude() {
+        if let lat = image.latitude,
+           let lon = image.longitude,
+           let altitude = image.altitude {
             XCTAssertEqual(lat.floatValue, testLat.floatValue, accuracy: 0.0001)
             XCTAssertEqual(lon.floatValue, testLon.floatValue, accuracy: 0.0001)
             XCTAssertEqual(altitude.floatValue, testAltitude.floatValue, accuracy: 0.0001)

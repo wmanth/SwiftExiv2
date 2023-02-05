@@ -69,7 +69,7 @@ const std::string kGPSAltitudeRefKey   = "Exif.GPSInfo.GPSAltitudeRef";
     return result;
 }
 
-- (nullable NSDateComponents *)getDateTimeModified {
+- (NSDateComponents *)dateTimeModified {
     auto dateTimeValue = [self valueForExifKey:kImageDateTimeKey];
     auto timeZoneValue = [self valueForExifKey:kPhotoOffsetTimeKey];
 
@@ -77,7 +77,7 @@ const std::string kGPSAltitudeRefKey   = "Exif.GPSInfo.GPSAltitudeRef";
                              timeZoneValue:timeZoneValue.get()];
 }
 
-- (nullable NSDateComponents *)getDateTimeOriginal {
+- (NSDateComponents *)dateTimeOriginal {
     auto dateTimeValue = [self valueForExifKey:kPhotoDateTimeOriginalKey];
     auto timeZoneValue = [self valueForExifKey:kPhotoOffsetTimeOriginalKey];
 
@@ -85,7 +85,7 @@ const std::string kGPSAltitudeRefKey   = "Exif.GPSInfo.GPSAltitudeRef";
                              timeZoneValue:timeZoneValue.get()];
 }
 
-- (nullable NSDateComponents *)getDateTimeDigitized {
+- (NSDateComponents *)dateTimeDigitized {
     auto dateTimeValue = [self valueForExifKey:kPhotoDateTimeDigitizedKey];
     auto timeZoneValue = [self valueForExifKey:kPhotoOffsetTimeDigitizedKey];
 
@@ -109,19 +109,12 @@ const std::string kGPSAltitudeRefKey   = "Exif.GPSInfo.GPSAltitudeRef";
     [self setValue:dateTimeComponents.timeZone.toValue.get() forExifKey:kPhotoOffsetTimeDigitizedKey];
 }
 
-- (nullable NSNumber *)getLatitude {
+- (NSNumber *)latitude {
     auto latRef = [self valueForExifKey:kGPSLatitudeRefKey];
     auto latVal = [self valueForExifKey:kGPSLatitudeKey];
 
     return (latRef.get() && latVal.get()) ?
         [NSNumber fromDegMinSec:latVal.get() negative:(latRef->toString() == "S")] : nil;
-}
-
-- (nullable NSNumber *)getLongitude {
-    auto lonRef = [self valueForExifKey:kGPSLongitudeRefKey];
-    auto lonVal = [self valueForExifKey:kGPSLongitudeKey];
-    return (lonRef.get() && lonVal.get()) ?
-        [NSNumber fromDegMinSec:lonVal.get() negative:lonRef->toString() == "W"] : nil;
 }
 
 - (void)setLatitude:(NSNumber *)latitude {
@@ -132,6 +125,13 @@ const std::string kGPSAltitudeRefKey   = "Exif.GPSInfo.GPSAltitudeRef";
     [self setValue:latitudeVal.get() ? &latitudeRef : NULL forExifKey:kGPSLatitudeRefKey];
 }
 
+- (NSNumber *)longitude {
+    auto lonRef = [self valueForExifKey:kGPSLongitudeRefKey];
+    auto lonVal = [self valueForExifKey:kGPSLongitudeKey];
+    return (lonRef.get() && lonVal.get()) ?
+        [NSNumber fromDegMinSec:lonVal.get() negative:lonRef->toString() == "W"] : nil;
+}
+
 - (void)setLongitude:(NSNumber *)longitude {
     auto longitudeVal = longitude.toDegMinSec;
     auto longitudeRef = AsciiValue(longitude.doubleValue > 0 ? "E" : "W");
@@ -140,7 +140,7 @@ const std::string kGPSAltitudeRefKey   = "Exif.GPSInfo.GPSAltitudeRef";
     [self setValue:longitudeVal.get() ? &longitudeRef : NULL forExifKey:kGPSLongitudeRefKey];
 }
 
-- (nullable NSNumber *)getAltitude {
+- (NSNumber *)altitude {
     auto altitudeRef = [self valueForExifKey:kGPSAltitudeRefKey];
     auto altitudeVal = [self valueForExifKey:kGPSAltitudeKey];
     return (altitudeRef.get() && altitudeVal.get()) ?
