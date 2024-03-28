@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import Exiv2
+@testable import SwiftExiv2
 
 final class SwiftExiv2Tests: XCTestCase {
 
@@ -46,15 +46,14 @@ final class SwiftExiv2Tests: XCTestCase {
     }
 
     func testFailReadDateTimeOriginal() throws {
-        let image = Exiv2Image(url: test1ImageURL)
+        let image = Image(url: test1ImageURL)
         image.readMetadata()
         XCTAssertNil(image.dateTimeOriginal)
     }
 
     func testSuccessReadDateTimeOriginal() throws {
-        let image = Exiv2Image(url: test2ImageURL)
+        let image = Image(url: test2ImageURL)
         image.readMetadata()
-        NSLog("%@", image.description)
         if let components = image.dateTimeOriginal {
             XCTAssertEqual(components.year, 2022)
             XCTAssertEqual(components.month, 12)
@@ -71,7 +70,7 @@ final class SwiftExiv2Tests: XCTestCase {
     func testSuccessWriteDateTime() throws {
         let testImageURL = try self.temporaryCopiedResource(test1ImageURL)
 
-        let image = Exiv2Image(url: testImageURL)
+        let image = Image(url: testImageURL)
         image.readMetadata()
         let testDateComponents = DateComponents(
             calendar: Calendar(identifier: .iso8601),
@@ -85,7 +84,7 @@ final class SwiftExiv2Tests: XCTestCase {
         image.dateTimeOriginal = testDateComponents
         image.writeMetadata()
 
-        let result = Exiv2Image(url: testImageURL)
+        let result = Image(url: testImageURL)
         result.readMetadata()
         if let dateComponents = result.dateTimeOriginal {
             XCTAssertEqual(dateComponents.year,   testDateComponents.year)
@@ -102,7 +101,7 @@ final class SwiftExiv2Tests: XCTestCase {
     }
 
     func testFailToReadLatLon() throws {
-        let image = Exiv2Image(url: test1ImageURL)
+        let image = Image(url: test1ImageURL)
         image.readMetadata()
 
         let lat = image.latitude
@@ -115,16 +114,16 @@ final class SwiftExiv2Tests: XCTestCase {
     }
 
     func testSuccessToReadLatLon() throws {
-        let image = Exiv2Image(url: test2ImageURL)
+        let image = Image(url: test2ImageURL)
         image.readMetadata()
 
         if let lat = image.latitude,
            let lon = image.longitude,
            let altitude = image.altitude {
 
-            XCTAssertEqual(lat.floatValue, 30.0283, accuracy: 0.0001)
-            XCTAssertEqual(lon.floatValue, 118.9875, accuracy: 0.0001)
-            XCTAssertEqual(altitude.floatValue, 1158.7701, accuracy: 0.0001)
+            XCTAssertEqual(lat, 30.0283, accuracy: 0.0001)
+            XCTAssertEqual(lon, 118.9875, accuracy: 0.0001)
+            XCTAssertEqual(altitude, 1158.7701, accuracy: 0.0001)
         }
         else {
             XCTFail()
@@ -133,26 +132,26 @@ final class SwiftExiv2Tests: XCTestCase {
 
     func testSuccessToWriteLatLon() throws {
         let testImageURL = try self.temporaryCopiedResource(test1ImageURL)
-        let image = Exiv2Image(url: testImageURL)
+        let image = Image(url: testImageURL)
 
-        let testLat = NSNumber(31.22896)
-        let testLon = NSNumber(121.48022)
-        let testAltitude = NSNumber(1683.24)
+        let testLat: Double = 31.22896
+        let testLon: Double = 121.48022
+        let testAlt: Float = 1683.24
 
         image.readMetadata()
         image.latitude = testLat
         image.longitude = testLon
-        image.altitude = testAltitude
+        image.altitude = testAlt
         image.writeMetadata()
 
-        let result = Exiv2Image(url: testImageURL)
+        let result = Image(url: testImageURL)
         result.readMetadata()
         if let lat = image.latitude,
            let lon = image.longitude,
-           let altitude = image.altitude {
-            XCTAssertEqual(lat.floatValue, testLat.floatValue, accuracy: 0.0001)
-            XCTAssertEqual(lon.floatValue, testLon.floatValue, accuracy: 0.0001)
-            XCTAssertEqual(altitude.floatValue, testAltitude.floatValue, accuracy: 0.0001)
+           let alt = image.altitude {
+            XCTAssertEqual(lat, testLat, accuracy: 0.0001)
+            XCTAssertEqual(lon, testLon, accuracy: 0.0001)
+            XCTAssertEqual(alt, testAlt, accuracy: 0.0001)
 
         } else {
             XCTFail()

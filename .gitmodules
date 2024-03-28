@@ -1,3 +1,3 @@
-[submodule "Exiv2"]
-	path = Sources/exiv2lib/library
+[submodule "exiv2"]
+	path = Sources/CxxExiv2/exiv2
 	url = https://github.com/Exiv2/exiv2.git
