@@ -26,10 +26,10 @@ private:
 
 private:
     Exiv2::Value::UniquePtr getValueForExifKey(const std::string& keyName) const;
-    void setValueForExifKey(const std::string &keyName, const Exiv2::Value::UniquePtr& pValue);
+    void setValueForExifKey(const std::string &keyName, const Exiv2::Value* pValue);
 
     std::optional<double> getLocationDegrees(const std::string& valKeyName, const std::string& refKeyName) const;
-    std::optional<float> getRational(const std::string& valKeyName, const std::string& refKeyName) const;
+    std::optional<double> getRational(const std::string& valKeyName, const std::string& refKeyName) const;
 
     std::optional<TimeStamp> getTimeStamp(const std::string& dateTimeKeyName, const std::string& offsetKeyName) const;
 

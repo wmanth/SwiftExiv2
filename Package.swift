@@ -43,11 +43,7 @@ let package = Package(
             name: "SwiftExiv2Tests",
             dependencies: ["SwiftExiv2"],
             resources: [.copy("Assets")],
-            swiftSettings: [.interoperabilityMode(.Cxx)],
-            linkerSettings: [
-                .linkedLibrary("expat"),
-                .linkedLibrary("iconv"),
-                .linkedLibrary("z")])
+            swiftSettings: [.interoperabilityMode(.Cxx)])
     ],
     cxxLanguageStandard: .cxx17
 )

@@ -20,15 +20,25 @@ static const String kGPSLongitudeRefKey  = "Exif.GPSInfo.GPSLongitudeRef";
 static const String kGPSAltitudeKey      = "Exif.GPSInfo.GPSAltitude";
 static const String kGPSAltitudeRefKey   = "Exif.GPSInfo.GPSAltitudeRef";
 
-Value::UniquePtr makeValueFromRational(uint32_t value, uint32_t denominator) {
+Value::UniquePtr makeValueFromString(optional<String> string) {
+    return string
+        ? Value::UniquePtr(new AsciiValue(string.value()))
+        : Value::UniquePtr(nullptr);
+}
+
+Value::UniquePtr makeValueFromRational(optional<double> rational, uint32_t denominator = 1000) {
+    if (!rational) return Value::UniquePtr(nullptr);
+
     auto *pURationalValue = new URationalValue();
-    pURationalValue->value_.push_back(URational(value, denominator));
+    pURationalValue->value_.push_back(URational(rational.value() * denominator, denominator));
 
     return Value::UniquePtr(pURationalValue);
 }
 
-Value::UniquePtr makeValueFromLocationDegrees(double locationDegrees) {
-    double val = abs(locationDegrees);
+Value::UniquePtr makeValueFromLocationDegrees(optional<double> locationDegrees) {
+    if (!locationDegrees) return Value::UniquePtr(nullptr);
+
+    double val = abs(locationDegrees.value());
     uint32_t deg = val; val = (val - deg) * 60;
     uint32_t min = val; val = (val - min) * 60;
     uint32_t msec = val * 1000;
@@ -41,27 +51,33 @@ Value::UniquePtr makeValueFromLocationDegrees(double locationDegrees) {
     return Value::UniquePtr(pURationalValue);
 }
 
-Value::UniquePtr makeValueFromDateTime(const TimeStamp& timeStamp) {
+Value::UniquePtr makeValueFromDateTime(optional<TimeStamp> timeStamp) {
+    if (!timeStamp) return Value::UniquePtr(nullptr);
+
+    TimeStamp ts = timeStamp.value();
     stringstream ss;
 
     ss << setfill('0');
-    ss << setw(2) << timeStamp.year     << ':';
-    ss << setw(2) << timeStamp.month    << ':';
-    ss << setw(2) << timeStamp.day      << ' ';
-    ss << setw(2) << timeStamp.hour     << ':';
-    ss << setw(2) << timeStamp.minute   << ':';
-    ss << setw(2) << timeStamp.second;
+    ss << setw(2) << ts.year    << ':';
+    ss << setw(2) << ts.month   << ':';
+    ss << setw(2) << ts.day     << ' ';
+    ss << setw(2) << ts.hour    << ':';
+    ss << setw(2) << ts.minute  << ':';
+    ss << setw(2) << ts.second;
 
     return Value::UniquePtr(new AsciiValue(ss.str()));
 }
 
-Value::UniquePtr makeValueFromTimeOffset(const TimeStamp& timeStamp) {
+Value::UniquePtr makeValueFromTimeOffset(optional<TimeStamp> timeStamp) {
+    if (!timeStamp) return Value::UniquePtr(nullptr);
+
+    TimeStamp ts = timeStamp.value();
     stringstream ss;
 
     ss << setfill('0');
-    ss << (timeStamp.offset_hour > 0 ? '+' : '-');
-    ss << setw(2) << timeStamp.offset_hour << ':';
-    ss << setw(2) << timeStamp.offset_minute;
+    ss << (ts.offset_hour > 0 ? '+' : '-');
+    ss << setw(2) << ts.offset_hour << ':';
+    ss << setw(2) << ts.offset_minute;
 
     return Value::UniquePtr(new AsciiValue(ss.str()));
 }
@@ -86,15 +102,15 @@ Value::UniquePtr ImageProxy::getValueForExifKey(const String& keyName) const {
     return pos == exifData.end() ? nullptr : pos->getValue();
 }
 
-void ImageProxy::setValueForExifKey(const String& keyName, const Value::UniquePtr& value) {
+void ImageProxy::setValueForExifKey(const String& keyName, const Value* pValue) {
     auto key = ExifKey(keyName);
     auto& exifData = _image->exifData();
     auto pos = exifData.findKey(key);
     if (pos == exifData.end()) {
-        if (!value) return;
-        exifData.add(key, value.get());
-    } else if (value) {
-        *pos = *value;
+        if (!pValue) return;
+        exifData.add(key, pValue);
+    } else if (pValue) {
+        *pos = *pValue;
     } else {
         exifData.erase(pos);
     }
@@ -104,7 +120,7 @@ optional<double> ImageProxy::getLocationDegrees(const String& valKeyName, const 
     auto val = getValueForExifKey(valKeyName);
     auto ref = getValueForExifKey(refKeyName);
 
-    if (!val || !ref) return std::nullopt;
+    if (!val || !ref) return nullopt;
 
     float deg = val->toFloat(0);
     float min = val->toFloat(1);
@@ -113,7 +129,7 @@ optional<double> ImageProxy::getLocationDegrees(const String& valKeyName, const 
     return (sec/60 + min)/60 + deg;
 }
 
-optional<float> ImageProxy::getRational(const String& valKeyName, const String& refKeyName) const {
+optional<double> ImageProxy::getRational(const String& valKeyName, const String& refKeyName) const {
     auto val = getValueForExifKey(valKeyName);
     auto ref = getValueForExifKey(refKeyName);
 
@@ -154,15 +170,11 @@ optional<TimeStamp> ImageProxy::getDateTimeOriginal() const {
 }
 
 void ImageProxy::setDateTimeOriginal(optional<TimeStamp> timeStamp) {
-    auto dateTimeValue = timeStamp.has_value()
-        ? makeValueFromDateTime(timeStamp.value())
-        : Value::UniquePtr(nullptr);
-    auto timeOffsetValue = timeStamp.has_value()
-        ? makeValueFromTimeOffset(timeStamp.value())
-        : Value::UniquePtr(nullptr);
+    auto dateTimeValue = makeValueFromDateTime(timeStamp);
+    auto timeOffsetValue = makeValueFromTimeOffset(timeStamp);
 
-    setValueForExifKey(kPhotoDateTimeOriginalKey, dateTimeValue);
-    setValueForExifKey(kPhotoOffsetTimeOriginalKey, timeOffsetValue);
+    setValueForExifKey(kPhotoDateTimeOriginalKey, dateTimeValue.release());
+    setValueForExifKey(kPhotoOffsetTimeOriginalKey, timeOffsetValue.release());
 }
 
 #pragma mark - GPSInfo
@@ -172,15 +184,13 @@ optional<double> ImageProxy::getLatitude() const {
 }
 
 void ImageProxy::setLatitude(optional<double> latitude) {
-    auto val = latitude
-        ? makeValueFromLocationDegrees(latitude.value())
-        : Value::UniquePtr(nullptr);
-    auto ref = latitude
-        ? Value::UniquePtr(new AsciiValue(latitude.value() > 0 ? "N" : "S"))
-        : Value::UniquePtr(nullptr);
+    auto latitudeVal = makeValueFromLocationDegrees(latitude);
+    auto latitudeRef = latitude
+        ? makeValueFromString(latitude.value() > 0 ? "N" : "S")
+        : makeValueFromString(nullopt);
 
-    setValueForExifKey(kGPSLatitudeKey, val);
-    setValueForExifKey(kGPSLatitudeRefKey, ref);
+    setValueForExifKey(kGPSLatitudeKey, latitudeVal.release());
+    setValueForExifKey(kGPSLatitudeRefKey, latitudeRef.release());
 }
 
 optional<double> ImageProxy::getLongitude() const {
@@ -188,15 +198,13 @@ optional<double> ImageProxy::getLongitude() const {
 }
 
 void ImageProxy::setLongitude(optional<double> longitude) {
-    auto val = longitude
-        ? makeValueFromLocationDegrees(longitude.value())
-        : Value::UniquePtr(nullptr);
-    auto ref = longitude
-        ? Value::UniquePtr(new AsciiValue(longitude.value() > 0 ? "E" : "W"))
-        : Value::UniquePtr(nullptr);
+    auto longitudeVal = makeValueFromLocationDegrees(longitude);
+    auto longitudeRef = longitude
+        ? makeValueFromString(longitude.value() > 0 ? "E" : "W")
+        : makeValueFromString(nullopt);
 
-    setValueForExifKey(kGPSLongitudeKey, val);
-    setValueForExifKey(kGPSLongitudeRefKey, ref);
+    setValueForExifKey(kGPSLongitudeKey, longitudeVal.release());
+    setValueForExifKey(kGPSLongitudeRefKey, longitudeRef.release());
 }
 
 optional<float> ImageProxy::getAltitude() const {
@@ -204,16 +212,12 @@ optional<float> ImageProxy::getAltitude() const {
 }
 
 void ImageProxy::setAltitude(optional<float> altitude) {
-    uint32_t denominator = 100;
+    auto altitudeVal = makeValueFromRational(altitude);
 
-    auto altitudeVal = altitude.has_value()
-        ? makeValueFromRational(altitude.value() * denominator, denominator)
-        : Value::UniquePtr(nullptr);
+    auto altitudeRef = altitude ?
+        makeValueFromString(altitude.value() > 0 ? "0" : "1") :
+        makeValueFromString(nullopt);
 
-    auto altitudeRef = altitude.has_value()
-        ? Value::UniquePtr(new AsciiValue(altitude.value() > 0 ? "0" : "1"))
-        : Value::UniquePtr(nullptr);
-
-    setValueForExifKey(kGPSAltitudeKey, altitudeVal);
-    setValueForExifKey(kGPSAltitudeRefKey, altitudeRef);
+    setValueForExifKey(kGPSAltitudeKey, altitudeVal.release());
+    setValueForExifKey(kGPSAltitudeRefKey, altitudeRef.release());
 }

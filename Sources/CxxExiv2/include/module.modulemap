@@ -1,0 +1,9 @@
+module CxxExiv2 {
+    header "ImageProxy.hpp"
+
+    link "expat"
+    link "iconv"
+    link "z"
+
+    export *
+}
