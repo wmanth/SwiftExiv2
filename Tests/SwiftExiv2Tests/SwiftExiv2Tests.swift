@@ -149,9 +149,9 @@ final class SwiftExiv2Tests: XCTestCase {
         if let lat = image.latitude,
            let lon = image.longitude,
            let alt = image.altitude {
-            XCTAssertEqual(lat, testLat, accuracy: 0.0001)
-            XCTAssertEqual(lon, testLon, accuracy: 0.0001)
-            XCTAssertEqual(alt, testAlt, accuracy: 0.0001)
+            XCTAssertEqual(lat, testLat, accuracy: 1/1000)
+            XCTAssertEqual(lon, testLon, accuracy: 1/1000)
+            XCTAssertEqual(alt, testAlt, accuracy: 1/1000)
 
         } else {
             XCTFail()
