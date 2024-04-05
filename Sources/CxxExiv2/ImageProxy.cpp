@@ -1,5 +1,7 @@
 #include "ImageProxy.hpp"
 
+#include <iostream>
+
 using namespace std;
 using namespace Exiv2;
 
@@ -83,18 +85,24 @@ Value::UniquePtr makeValueFromTimeOffset(optional<TimeStamp> timeStamp) {
 }
 
 ImageProxy::ImageProxy(const String& name) {
-    _image = ImageFactory::open(name);
+    try {
+        _image = ImageFactory::open(name);
+    } catch (const exception& e) {
+        cerr << "Error opening '" << name << "': " << e.what() << endl;
+    }
 }
 
 void ImageProxy::readMetadata() {
-    _image->readMetadata();
+    if (_image) _image->readMetadata();
 }
 
 void ImageProxy::writeMetadata() {
-    _image->writeMetadata();
+    if (_image) _image->writeMetadata();
 }
 
 Value::UniquePtr ImageProxy::getValueForExifKey(const String& keyName) const {
+    if (!_image) return Value::UniquePtr(nullptr);
+
     auto key = ExifKey(keyName);
     auto exifData = _image->exifData();
     auto pos = exifData.findKey(key);
@@ -103,6 +111,8 @@ Value::UniquePtr ImageProxy::getValueForExifKey(const String& keyName) const {
 }
 
 void ImageProxy::setValueForExifKey(const String& keyName, const Value* pValue) {
+    if (!_image) return;
+
     auto key = ExifKey(keyName);
     auto& exifData = _image->exifData();
     auto pos = exifData.findKey(key);
