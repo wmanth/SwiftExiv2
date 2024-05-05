@@ -42,7 +42,7 @@ let package = Package(
         .testTarget(
             name: "SwiftExiv2Tests",
             dependencies: ["SwiftExiv2"],
-            resources: [.copy("Assets")],
+            resources: [.copy("Test Assets")],
             swiftSettings: [.interoperabilityMode(.Cxx)])
     ],
     cxxLanguageStandard: .cxx17

@@ -10,14 +10,14 @@ final class SwiftExiv2Tests: XCTestCase {
     private var test1ImageURL: URL! {
         Bundle.module.url(forResource: "test1",
                         withExtension: "jpg",
-                         subdirectory: "Assets")
+                         subdirectory: "Test Assets")
     }
 
     // contains fill set of EXIF data
     private var test2ImageURL: URL! {
         Bundle.module.url(forResource: "test2",
                         withExtension: "jpg",
-                         subdirectory: "Assets")
+                         subdirectory: "Test Assets")
     }
 
     override func setUp() {

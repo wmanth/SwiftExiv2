@@ -7,7 +7,7 @@ public class Image {
 
     public init(url: URL) {
         self.url = url
-        imageProxy = ImageProxy(std.string(url.absoluteString))
+        imageProxy = ImageProxy(std.string(url.path))
     }
 
     public func readMetadata() { imageProxy.readMetadata() }
