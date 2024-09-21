@@ -1,74 +1,38 @@
-import XCTest
+import Foundation
+import Testing
+import Numerics
 
 @testable import SwiftExiv2
 
-final class SwiftExiv2Tests: XCTestCase {
-
+@Suite
+struct SwiftExiv2Tests {
     private var temporaryDirectoryURL: URL!
 
-    // contains no EXIF data
-    private var test1ImageURL: URL! {
-        Bundle.module.url(forResource: "test1",
-                        withExtension: "jpg",
-                         subdirectory: "Test Assets")
-    }
-
-    // contains fill set of EXIF data
-    private var test2ImageURL: URL! {
-        Bundle.module.url(forResource: "test2",
-                        withExtension: "jpg",
-                         subdirectory: "Test Assets")
-    }
-
-    override func setUp() {
-        temporaryDirectoryURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString)
-        do {
-            try FileManager.default.createDirectory(at: temporaryDirectoryURL,
-                           withIntermediateDirectories: true);
-        } catch {
-            XCTFail("could not create temporary folder")
-        }
-    }
-
-    override func tearDown() {
-        do {
-            try FileManager.default.removeItem(at: temporaryDirectoryURL)
-        } catch {
-            XCTFail("could not remove temporary folder")
-        }
-    }
-
-    func temporaryCopiedResource(_ sourceURL: URL) throws -> URL {
-        let destURL = temporaryDirectoryURL.appendingPathComponent(sourceURL.lastPathComponent)
-        try FileManager.default.copyItem(at: sourceURL, to: destURL)
-        return destURL
-    }
-
-    func testFailReadDateTimeOriginal() throws {
-        let image = Image(url: test1ImageURL)
+    @Test(.tags(.reading))
+    func failReadDateTimeOriginal() throws {
+        let image = Image(url: TestResources.test1ImageURL)
         image.readMetadata()
-        XCTAssertNil(image.dateTimeOriginal)
+        #expect(image.dateTimeOriginal == nil)
     }
 
-    func testSuccessReadDateTimeOriginal() throws {
-        let image = Image(url: test2ImageURL)
+    @Test(.tags(.reading))
+    func successReadDateTimeOriginal() throws {
+        let image = Image(url: TestResources.test2ImageURL)
         image.readMetadata()
-        if let components = image.dateTimeOriginal {
-            XCTAssertEqual(components.year, 2022)
-            XCTAssertEqual(components.month, 12)
-            XCTAssertEqual(components.day, 20)
-            XCTAssertEqual(components.hour, 15)
-            XCTAssertEqual(components.minute, 45)
-            XCTAssertEqual(components.second, 39)
-        }
-        else {
-            XCTFail()
-        }
+
+        let components = try #require(image.dateTimeOriginal)
+        #expect(components.year == 2022)
+        #expect(components.month == 12)
+        #expect(components.day == 20)
+        #expect(components.hour == 15)
+        #expect(components.minute == 45)
+        #expect(components.second == 39)
     }
 
-    func testSuccessWriteDateTime() throws {
-        let testImageURL = try self.temporaryCopiedResource(test1ImageURL)
+    @Test(.tags(.writing))
+    func successWriteDateTime() throws {
+        let tempDir = try #require(TemporaryDirectory())
+        let testImageURL = try #require(tempDir.copiedResource(TestResources.test1ImageURL))
 
         let image = Image(url: testImageURL)
         image.readMetadata()
@@ -86,54 +50,51 @@ final class SwiftExiv2Tests: XCTestCase {
 
         let result = Image(url: testImageURL)
         result.readMetadata()
-        if let dateComponents = result.dateTimeOriginal {
-            XCTAssertEqual(dateComponents.year,   testDateComponents.year)
-            XCTAssertEqual(dateComponents.month,  testDateComponents.month)
-            XCTAssertEqual(dateComponents.day,    testDateComponents.day)
-            XCTAssertEqual(dateComponents.hour,   testDateComponents.hour)
-            XCTAssertEqual(dateComponents.minute, testDateComponents.minute)
-            XCTAssertEqual(dateComponents.second, testDateComponents.second)
-            XCTAssertEqual(dateComponents.timeZone!.secondsFromGMT(), testDateComponents.timeZone!.secondsFromGMT())
-        }
-        else {
-            XCTFail()
-        }
+
+        let dateComponents = try #require(result.dateTimeOriginal)
+        #expect(dateComponents.year == testDateComponents.year)
+        #expect(dateComponents.month == testDateComponents.month)
+        #expect(dateComponents.day == testDateComponents.day)
+        #expect(dateComponents.hour == testDateComponents.hour)
+        #expect(dateComponents.minute == testDateComponents.minute)
+        #expect(dateComponents.second == testDateComponents.second)
+        #expect(dateComponents.timeZone!.secondsFromGMT() == testDateComponents.timeZone!.secondsFromGMT())
     }
 
-    func testFailToReadLatLon() throws {
-        let image = Image(url: test1ImageURL)
+    @Test(.tags(.reading))
+    func failToReadLatLon() throws {
+        let image = Image(url: TestResources.test1ImageURL)
         image.readMetadata()
 
         let lat = image.latitude
         let lon = image.longitude
         let altitude = image.altitude
 
-        XCTAssertNil(lat)
-        XCTAssertNil(lon)
-        XCTAssertNil(altitude)
+        #expect(lat == nil)
+        #expect(lon == nil)
+        #expect(altitude == nil)
     }
 
-    func testSuccessToReadLatLon() throws {
-        let image = Image(url: test2ImageURL)
+    @Test(.tags(.reading))
+    func successToReadLatLon() throws {
+        let image = Image(url: TestResources.test2ImageURL)
         image.readMetadata()
 
-        if let lat = image.latitude,
-           let lon = image.longitude,
-           let altitude = image.altitude {
+        let lat = try #require(image.latitude)
+        let lon = try #require(image.longitude)
+        let altitude = try #require(image.altitude)
 
-            XCTAssertEqual(lat, 30.0283, accuracy: 0.0001)
-            XCTAssertEqual(lon, 118.9875, accuracy: 0.0001)
-            XCTAssertEqual(altitude, 1158.7701, accuracy: 0.0001)
-        }
-        else {
-            XCTFail()
-        }
+        #expect(lat.isApproximatelyEqual(to: 30.0283, absoluteTolerance: 1/1000))
+        #expect(lon.isApproximatelyEqual(to: 118.9875, absoluteTolerance: 1/1000))
+        #expect(altitude.isApproximatelyEqual(to: 1158.7701, absoluteTolerance: 1/1000))
     }
 
-    func testSuccessToWriteLatLon() throws {
-        let testImageURL = try self.temporaryCopiedResource(test1ImageURL)
-        let image = Image(url: testImageURL)
+    @Test(.tags(.writing))
+    func successToWriteLatLon() throws {
+        let tempDir = try #require(TemporaryDirectory())
+        let testImageURL = try #require(tempDir.copiedResource(TestResources.test1ImageURL))
 
+        let image = Image(url: testImageURL)
         let testLat: Double = 31.22896
         let testLon: Double = 121.48022
         let testAlt: Float = 1683.24
@@ -146,15 +107,13 @@ final class SwiftExiv2Tests: XCTestCase {
 
         let result = Image(url: testImageURL)
         result.readMetadata()
-        if let lat = image.latitude,
-           let lon = image.longitude,
-           let alt = image.altitude {
-            XCTAssertEqual(lat, testLat, accuracy: 1/1000)
-            XCTAssertEqual(lon, testLon, accuracy: 1/1000)
-            XCTAssertEqual(alt, testAlt, accuracy: 1/1000)
 
-        } else {
-            XCTFail()
-        }
+        let lat = try #require(image.latitude)
+        let lon = try #require(image.longitude)
+        let alt = try #require(image.altitude)
+
+        #expect(lat.isApproximatelyEqual(to: testLat, absoluteTolerance: 1/1000))
+        #expect(lon.isApproximatelyEqual(to: testLon, absoluteTolerance: 1/1000))
+        #expect(alt.isApproximatelyEqual(to: testAlt, absoluteTolerance: 1/1000))
     }
 }
