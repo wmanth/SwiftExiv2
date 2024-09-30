@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import Numerics
 
+@testable import CxxExiv2
 @testable import SwiftExiv2
 
 @Suite
@@ -20,13 +21,14 @@ struct SwiftExiv2Tests {
         let image = Image(url: TestResources.test2ImageURL)
         image.readMetadata()
 
-        let components = try #require(image.dateTimeOriginal)
-        #expect(components.year == 2022)
-        #expect(components.month == 12)
-        #expect(components.day == 20)
-        #expect(components.hour == 15)
-        #expect(components.minute == 45)
-        #expect(components.second == 39)
+        let dateTime = try #require(image.dateTimeOriginal)
+        #expect(dateTime.year == 2022)
+        #expect(dateTime.month == 12)
+        #expect(dateTime.day == 20)
+        #expect(dateTime.hour == 15)
+        #expect(dateTime.minute == 45)
+        #expect(dateTime.second == 39)
+        #expect(dateTime.offset == 8 * 3600)
     }
 
     @Test(.tags(.writing))
@@ -36,29 +38,23 @@ struct SwiftExiv2Tests {
 
         let image = Image(url: testImageURL)
         image.readMetadata()
-        let testDateComponents = DateComponents(
-            calendar: Calendar(identifier: .iso8601),
-            timeZone: TimeZone(identifier: "CET"),
+
+        let testDateTime = DateTime(
             year: 2022,
             month: 3,
             day: 28,
             hour: 9,
             minute: 32,
-            second: 14)
-        image.dateTimeOriginal = testDateComponents
+            second: 14,
+            offset: 2 * 3600)
+        image.dateTimeOriginal = testDateTime
         image.writeMetadata()
 
         let result = Image(url: testImageURL)
         result.readMetadata()
 
-        let dateComponents = try #require(result.dateTimeOriginal)
-        #expect(dateComponents.year == testDateComponents.year)
-        #expect(dateComponents.month == testDateComponents.month)
-        #expect(dateComponents.day == testDateComponents.day)
-        #expect(dateComponents.hour == testDateComponents.hour)
-        #expect(dateComponents.minute == testDateComponents.minute)
-        #expect(dateComponents.second == testDateComponents.second)
-        #expect(dateComponents.timeZone!.secondsFromGMT() == testDateComponents.timeZone!.secondsFromGMT())
+        let dateTime = try #require(result.dateTimeOriginal)
+        #expect(dateTime == testDateTime)
     }
 
     @Test(.tags(.reading))
@@ -66,54 +62,47 @@ struct SwiftExiv2Tests {
         let image = Image(url: TestResources.test1ImageURL)
         image.readMetadata()
 
-        let lat = image.latitude
-        let lon = image.longitude
-        let altitude = image.altitude
-
-        #expect(lat == nil)
-        #expect(lon == nil)
-        #expect(altitude == nil)
+        #expect(image.coordinate == nil)
+        #expect(image.altitude == nil)
     }
 
     @Test(.tags(.reading))
-    func successToReadLatLon() throws {
+    func successToReadCoordinate() throws {
         let image = Image(url: TestResources.test2ImageURL)
         image.readMetadata()
 
-        let lat = try #require(image.latitude)
-        let lon = try #require(image.longitude)
+        let coordinate = try #require(image.coordinate)
         let altitude = try #require(image.altitude)
 
-        #expect(lat.isApproximatelyEqual(to: 30.0283, absoluteTolerance: 1/1000))
-        #expect(lon.isApproximatelyEqual(to: 118.9875, absoluteTolerance: 1/1000))
+        #expect(coordinate.latitude.isApproximatelyEqual(to: 30.0283, absoluteTolerance: 1/10000))
+        #expect(coordinate.longitude.isApproximatelyEqual(to: 118.9875, absoluteTolerance: 1/10000))
         #expect(altitude.isApproximatelyEqual(to: 1158.7701, absoluteTolerance: 1/1000))
     }
 
-    @Test(.tags(.writing))
-    func successToWriteLatLon() throws {
+    @Test(.tags(.writing), arguments: [
+        Coordinate(31.22896, 121.48022),
+        Coordinate(-31.22896, -121.48022)]
+    )
+    func successToWriteCoordinate(testCoordinate: Coordinate) throws {
         let tempDir = try #require(TemporaryDirectory())
         let testImageURL = try #require(tempDir.copiedResource(TestResources.test1ImageURL))
 
         let image = Image(url: testImageURL)
-        let testLat: Double = 31.22896
-        let testLon: Double = 121.48022
         let testAlt: Float = 1683.24
 
         image.readMetadata()
-        image.latitude = testLat
-        image.longitude = testLon
+        image.coordinate = testCoordinate
         image.altitude = testAlt
         image.writeMetadata()
 
         let result = Image(url: testImageURL)
         result.readMetadata()
 
-        let lat = try #require(image.latitude)
-        let lon = try #require(image.longitude)
-        let alt = try #require(image.altitude)
+        let coordinate = try #require(image.coordinate)
+        let altitude = try #require(image.altitude)
 
-        #expect(lat.isApproximatelyEqual(to: testLat, absoluteTolerance: 1/1000))
-        #expect(lon.isApproximatelyEqual(to: testLon, absoluteTolerance: 1/1000))
-        #expect(alt.isApproximatelyEqual(to: testAlt, absoluteTolerance: 1/1000))
+        #expect(coordinate.latitude.isApproximatelyEqual(to: testCoordinate.latitude, absoluteTolerance: 1/10000))
+        #expect(coordinate.longitude.isApproximatelyEqual(to: testCoordinate.longitude, absoluteTolerance: 1/10000))
+        #expect(altitude.isApproximatelyEqual(to: testAlt, absoluteTolerance: 1/1000))
     }
 }
