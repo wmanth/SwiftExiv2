@@ -8,15 +8,41 @@
 #include "../exiv2/include/exiv2/image.hpp"
 #include "../exiv2/include/exiv2/value.hpp"
 
-struct TimeStamp {
+struct DateTime {
     long year;
     long month;
     long day;
     long hour;
     long minute;
     long second;
-    long offset_hour;
-    long offset_minute;
+    long offset;
+
+    bool operator==(const DateTime& other) const { return
+        other.year == year &&
+        other.month == month &&
+        other.day == day &&
+        other.hour == hour &&
+        other.minute == minute &&
+        other.second == second &&
+        other.offset == offset;
+    }
+};
+
+struct Coordinate {
+    double latitude;
+    double longitude;
+
+    Coordinate(double latitude, double longitude) :
+        latitude(latitude),
+        longitude(longitude)
+    {}
+};
+
+struct Direction {
+    enum class Type { kTrue, kMagnetic };
+
+    float value;
+    Type type;
 };
 
 class ImageProxy {
@@ -28,10 +54,10 @@ private:
     Exiv2::Value::UniquePtr getValueForExifKey(const std::string& keyName) const;
     void setValueForExifKey(const std::string &keyName, const Exiv2::Value* pValue);
 
-    std::optional<double> getLocationDegrees(const std::string& valKeyName, const std::string& refKeyName) const;
+    std::optional<double> getLocationDegrees(const std::string& valKeyName) const;
     std::optional<double> getRational(const std::string& valKeyName, const std::string& refKeyName) const;
 
-    std::optional<TimeStamp> getTimeStamp(const std::string& dateTimeKeyName, const std::string& offsetKeyName) const;
+    std::optional<DateTime> getTimeStamp(const std::string& dateTimeKeyName, const std::string& offsetKeyName) const;
 
 public:
     ImageProxy(const std::string& name);
@@ -40,25 +66,25 @@ public:
     void readMetadata();
     void writeMetadata();
 
-    std::optional<TimeStamp> getDateTimeOriginal() const;
-    void setDateTimeOriginal(std::optional<TimeStamp> timeStamp);
-    inline void setDateTimeOriginal(TimeStamp timeStamp) { setDateTimeOriginal(std::make_optional(timeStamp)); }
+    std::optional<DateTime> getDateTimeOriginal() const;
+    void setDateTimeOriginal(std::optional<DateTime> dateTime);
+    inline void setDateTimeOriginal(DateTime dateTime) { setDateTimeOriginal(std::make_optional(dateTime)); }
     inline void removeDateTimeOriginal() { setDateTimeOriginal(std::nullopt); }
 
-    std::optional<double> getLatitude() const;
-    void setLatitude(std::optional<double> latitude);
-    inline void setLatitude(double latitude) { setLatitude(std::make_optional(latitude)); }
-    inline void removeLatitude() { setLatitude(std::nullopt); }
-
-    std::optional<double> getLongitude() const;
-    void setLongitude(std::optional<double> longitude);
-    inline void setLongitude(double longitude) { setLongitude(std::make_optional(longitude)); }
-    inline void removeLongitude() { setLongitude(std::nullopt); }
+    std::optional<Coordinate> getCoordinate() const;
+    void setCoordinate(std::optional<Coordinate> coordinate);
+    inline void setCoordinate(Coordinate coordinate) { setCoordinate(std::make_optional(coordinate)); }
+    inline void removeCoordinate() { setCoordinate(std::nullopt); }
 
     std::optional<float> getAltitude() const;
     void setAltitude(std::optional<float> altitude);
     inline void setAltitude(float altitude) { setAltitude(std::make_optional(altitude)); }
     inline void removeAltitude() { setAltitude(std::nullopt); }
+
+    std::optional<Direction> getDirection() const;
+    void setDirection(std::optional<Direction> direction);
+    inline void setDirection(Direction direction) { setDirection(std::make_optional(direction)); }
+    inline void removeDirection() { setDirection(std::nullopt); }
 };
 
 #endif /* _IMAGE_HPP */

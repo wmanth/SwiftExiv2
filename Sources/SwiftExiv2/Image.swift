@@ -13,33 +13,22 @@ public class Image {
     public func readMetadata() { imageProxy.readMetadata() }
     public func writeMetadata() { imageProxy.writeMetadata() }
 
-    public var dateTimeOriginal: DateComponents? {
+    public var dateTimeOriginal: DateTime? {
         set(newValue) {
-            if let timeStamp = newValue?.toTimeStamp() {
+            if let timeStamp = newValue {
                 imageProxy.setDateTimeOriginal(timeStamp)
             }
             else { imageProxy.removeDateTimeOriginal() }
         }
-        get {
-            guard let timeStamp = imageProxy.getDateTimeOriginal().value else { return nil }
-            return DateComponents(timeStamp: timeStamp)
-        }
+        get { imageProxy.getDateTimeOriginal().value }
     }
 
-    public var latitude: Double? {
+    public var coordinate: Coordinate? {
         set(newValue) {
-            if let latitude = newValue { imageProxy.setLatitude(latitude) }
-            else { imageProxy.removeLatitude() }
+            if let coordinate = newValue { imageProxy.setCoordinate(coordinate) }
+            else { imageProxy.removeCoordinate() }
         }
-        get { imageProxy.getLatitude().value }
-    }
-
-    public var longitude: Double? {
-        set(newValue) {
-            if let longitude = newValue { imageProxy.setLongitude(longitude) }
-            else { imageProxy.removeLongitude() }
-        }
-        get { imageProxy.getLongitude().value }
+        get { imageProxy.getCoordinate().value }
     }
 
     public var altitude: Float? {
@@ -48,5 +37,13 @@ public class Image {
             else { imageProxy.removeAltitude() }
         }
         get { imageProxy.getAltitude().value; }
+    }
+
+    public var direction: Direction? {
+        set(newValue) {
+            if let direction = newValue { imageProxy.setDirection(direction) }
+            else { imageProxy.removeDirection() }
+        }
+        get { imageProxy.getDirection().value }
     }
 }
