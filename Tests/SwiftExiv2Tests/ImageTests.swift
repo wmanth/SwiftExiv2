@@ -2,7 +2,6 @@ import Foundation
 import Testing
 import Numerics
 
-@testable import CxxExiv2
 @testable import SwiftExiv2
 
 @Suite

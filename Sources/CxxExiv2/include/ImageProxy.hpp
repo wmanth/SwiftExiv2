@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <swift/bridging>
 
 #include "../exiv2/include/exiv2/image.hpp"
 #include "../exiv2/include/exiv2/value.hpp"
@@ -16,17 +17,7 @@ struct DateTime {
     long minute;
     long second;
     long offset;
-
-    bool operator==(const DateTime& other) const { return
-        other.year == year &&
-        other.month == month &&
-        other.day == day &&
-        other.hour == hour &&
-        other.minute == minute &&
-        other.second == second &&
-        other.offset == offset;
-    }
-};
+} SWIFT_CONFORMS_TO_PROTOCOL(Swift.Equatable);
 
 struct Coordinate {
     double latitude;
@@ -36,7 +27,7 @@ struct Coordinate {
         latitude(latitude),
         longitude(longitude)
     {}
-};
+} SWIFT_CONFORMS_TO_PROTOCOL(Swift.Equatable);
 
 class ImageProxy {
 
