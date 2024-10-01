@@ -16,16 +16,6 @@ struct DateTime {
     long minute;
     long second;
     long offset;
-
-    bool operator==(const DateTime& other) const { return
-        other.year == year &&
-        other.month == month &&
-        other.day == day &&
-        other.hour == hour &&
-        other.minute == minute &&
-        other.second == second &&
-        other.offset == offset;
-    }
 };
 
 struct Coordinate {
