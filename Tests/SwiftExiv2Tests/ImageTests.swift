@@ -9,16 +9,31 @@ struct SwiftExiv2Tests {
     private var temporaryDirectoryURL: URL!
 
     @Test(.tags(.reading))
+    func failToReadFile() throws {
+        #expect(throws: Image.Error.self) {
+            let _ = try Image(url: URL(fileURLWithPath: String()))
+        }
+    }
+
+    @Test(.tags(.reading))
+    func successToReadFile() throws {
+        #expect(throws: Never.self) {
+            let _ = try Image(url: TestResources.test1ImageURL)
+            let _ = try Image(url: TestResources.test2ImageURL)
+        }
+    }
+
+    @Test(.tags(.reading))
     func failReadDateTimeOriginal() throws {
-        let image = Image(url: TestResources.test1ImageURL)
-        image.readMetadata()
+        let image = try Image(url: TestResources.test1ImageURL)
+        try image.readMetadata()
         #expect(image.dateTimeOriginal == nil)
     }
 
     @Test(.tags(.reading))
     func successReadDateTimeOriginal() throws {
-        let image = Image(url: TestResources.test2ImageURL)
-        image.readMetadata()
+        let image = try Image(url: TestResources.test2ImageURL)
+        try image.readMetadata()
 
         let dateTime = try #require(image.dateTimeOriginal)
         #expect(dateTime.year == 2022)
@@ -35,8 +50,8 @@ struct SwiftExiv2Tests {
         let tempDir = try #require(TemporaryDirectory())
         let testImageURL = try #require(tempDir.copiedResource(TestResources.test1ImageURL))
 
-        let image = Image(url: testImageURL)
-        image.readMetadata()
+        let image = try Image(url: testImageURL)
+        try image.readMetadata()
 
         let testDateTime = DateTime(
             year: 2022,
@@ -47,10 +62,10 @@ struct SwiftExiv2Tests {
             second: 14,
             offset: 2 * 3600)
         image.dateTimeOriginal = testDateTime
-        image.writeMetadata()
+        try image.writeMetadata()
 
-        let result = Image(url: testImageURL)
-        result.readMetadata()
+        let result = try Image(url: testImageURL)
+        try result.readMetadata()
 
         let dateTime = try #require(result.dateTimeOriginal)
         #expect(dateTime == testDateTime)
@@ -58,8 +73,8 @@ struct SwiftExiv2Tests {
 
     @Test(.tags(.reading))
     func failToReadLatLon() throws {
-        let image = Image(url: TestResources.test1ImageURL)
-        image.readMetadata()
+        let image = try Image(url: TestResources.test1ImageURL)
+        try image.readMetadata()
 
         #expect(image.coordinate == nil)
         #expect(image.altitude == nil)
@@ -67,8 +82,8 @@ struct SwiftExiv2Tests {
 
     @Test(.tags(.reading))
     func successToReadCoordinate() throws {
-        let image = Image(url: TestResources.test2ImageURL)
-        image.readMetadata()
+        let image = try Image(url: TestResources.test2ImageURL)
+        try image.readMetadata()
 
         let coordinate = try #require(image.coordinate)
         let altitude = try #require(image.altitude)
@@ -86,16 +101,16 @@ struct SwiftExiv2Tests {
         let tempDir = try #require(TemporaryDirectory())
         let testImageURL = try #require(tempDir.copiedResource(TestResources.test1ImageURL))
 
-        let image = Image(url: testImageURL)
+        let image = try Image(url: testImageURL)
         let testAlt: Float = 1683.24
 
-        image.readMetadata()
+        try image.readMetadata()
         image.coordinate = testCoordinate
         image.altitude = testAlt
-        image.writeMetadata()
+        try image.writeMetadata()
 
-        let result = Image(url: testImageURL)
-        result.readMetadata()
+        let result = try Image(url: testImageURL)
+        try result.readMetadata()
 
         let coordinate = try #require(image.coordinate)
         let altitude = try #require(image.altitude)

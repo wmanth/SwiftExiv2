@@ -19,6 +19,8 @@ struct DateTime {
     long offset;
 } SWIFT_CONFORMS_TO_PROTOCOL(Swift.Equatable);
 
+#pragma mark -
+
 struct Coordinate {
     double latitude;
     double longitude;
@@ -28,6 +30,23 @@ struct Coordinate {
         longitude(longitude)
     {}
 } SWIFT_CONFORMS_TO_PROTOCOL(Swift.Equatable);
+
+#pragma mark -
+
+struct Error {
+private:
+    Exiv2::ErrorCode _code;
+    std::string _message;
+
+public:
+    Exiv2::ErrorCode getCode() const SWIFT_COMPUTED_PROPERTY { return _code; }
+    std::string getMessage() const SWIFT_COMPUTED_PROPERTY { return _message; }
+
+    Error() : _code(Exiv2::ErrorCode::kerSuccess), _message(std::string()) {}
+    Error(const Exiv2::Error& error) : _code(error.code()), _message(error.what()) {}
+};
+
+#pragma mark -
 
 class ImageProxy {
 
@@ -44,11 +63,11 @@ private:
     std::optional<DateTime> getDateTime(const std::string& dateTimeKeyName, const std::string& offsetKeyName) const;
 
 public:
-    ImageProxy(const std::string& name);
+    ImageProxy(const std::string& name, Error& error);
 
 public:
-    void readMetadata();
-    void writeMetadata();
+    void readMetadata(Error& error);
+    void writeMetadata(Error& error);
 
     std::optional<DateTime> getDateTimeOriginal() const;
     void setDateTimeOriginal(std::optional<DateTime> dateTime);

@@ -5,13 +5,43 @@ public class Image {
     public let url: URL
     private var imageProxy: ImageProxy
 
-    public init(url: URL) {
-        self.url = url
-        imageProxy = ImageProxy(std.string(url.path))
+    struct Error: Swift.Error {
+        let message: String
+
+        init(message: std.string) {
+            self.message = String(message)
+        }
     }
 
-    public func readMetadata() { imageProxy.readMetadata() }
-    public func writeMetadata() { imageProxy.writeMetadata() }
+    public init(url: URL) throws {
+        var error = CxxExiv2.Error()
+        let imageProxy = ImageProxy(std.string(url.path), &error)
+
+        if error.code != .kerSuccess {
+            throw Error(message: error.message)
+        }
+
+        self.url = url
+        self.imageProxy = imageProxy
+    }
+
+    public func readMetadata() throws {
+        var error = CxxExiv2.Error()
+        imageProxy.readMetadata(&error)
+
+        if error.code != .kerSuccess {
+            throw Error(message: error.message)
+        }
+    }
+
+    public func writeMetadata() throws {
+        var error = CxxExiv2.Error()
+        imageProxy.writeMetadata(&error)
+
+        if error.code != .kerSuccess {
+            throw Error(message: error.message)
+        }
+    }
 
     public var dateTimeOriginal: DateTime? {
         set(newValue) {

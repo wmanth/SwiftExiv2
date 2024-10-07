@@ -85,20 +85,36 @@ Value::UniquePtr makeValueFromTimeOffset(optional<DateTime> opt_dateTime) {
     return Value::UniquePtr(new AsciiValue(ss.str()));
 }
 
-ImageProxy::ImageProxy(const String& name) {
+ImageProxy::ImageProxy(const String& name, ::Error& error) : _image(nullptr) {
     try {
         _image = ImageFactory::open(name);
-    } catch (const exception& e) {
-        cerr << "Error opening '" << name << "': " << e.what() << endl;
+    } catch (const Exiv2::Error& e) {
+        error = ::Error(e);
     }
 }
 
-void ImageProxy::readMetadata() {
-    if (_image) _image->readMetadata();
+void ImageProxy::readMetadata(::Error& error) {
+    if (!_image) {
+        error = ::Error(Exiv2::Error(ErrorCode::kerCallFailed));
+        return;
+    }
+    try {
+        _image->readMetadata();
+    } catch (const Exiv2::Error& e) {
+        error = ::Error(e);
+    }
 }
 
-void ImageProxy::writeMetadata() {
-    if (_image) _image->writeMetadata();
+void ImageProxy::writeMetadata(::Error& error) {
+    if (!_image) {
+        error = ::Error(Exiv2::Error(ErrorCode::kerCallFailed));
+        return;
+    }
+    try {
+        _image->writeMetadata();
+    } catch (const Exiv2::Error& e) {
+        error = ::Error(e);
+    }
 }
 
 Value::UniquePtr ImageProxy::getValueForExifKey(const String& keyName) const {
