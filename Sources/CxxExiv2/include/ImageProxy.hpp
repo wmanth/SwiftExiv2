@@ -33,6 +33,8 @@ class ImageProxy {
 
 private:
     std::shared_ptr<Exiv2::Image> _image;
+    bool _isValid;
+    std::string _reason;
 
 private:
     Exiv2::Value::UniquePtr getValueForExifKey(const std::string& keyName) const;
@@ -45,6 +47,10 @@ private:
 
 public:
     ImageProxy(const std::string& name);
+
+public:
+    bool getIsValid() const SWIFT_COMPUTED_PROPERTY { return _isValid; }
+    std::string getReason() const SWIFT_COMPUTED_PROPERTY { return _reason; }
 
 public:
     void readMetadata();

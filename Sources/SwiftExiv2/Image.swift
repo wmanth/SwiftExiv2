@@ -5,9 +5,21 @@ public class Image {
     public let url: URL
     private var imageProxy: ImageProxy
 
-    public init(url: URL) {
+    struct Error: Swift.Error {
+        let message: String
+
+        init(message: std.string) {
+            self.message = String(message)
+        }
+    }
+
+    public init(url: URL) throws {
         self.url = url
         imageProxy = ImageProxy(std.string(url.path))
+
+        if !imageProxy.isValid {
+            throw Error(message: imageProxy.reason)
+        }
     }
 
     public func readMetadata() { imageProxy.readMetadata() }

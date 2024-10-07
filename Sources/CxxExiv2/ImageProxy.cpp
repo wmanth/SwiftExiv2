@@ -88,8 +88,11 @@ Value::UniquePtr makeValueFromTimeOffset(optional<DateTime> opt_dateTime) {
 ImageProxy::ImageProxy(const String& name) {
     try {
         _image = ImageFactory::open(name);
+        _isValid = true;
+        _reason = std::string();
     } catch (const exception& e) {
-        cerr << "Error opening '" << name << "': " << e.what() << endl;
+        _isValid = false;
+        _reason = e.what();
     }
 }
 
