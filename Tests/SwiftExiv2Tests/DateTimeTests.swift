@@ -34,8 +34,9 @@ struct DateTimeTests {
 
     @Test
     func createDateTime() throws {
+        let dateTimeOffset = 3600
         let dateComponents = DateComponents(calendar: Calendar(identifier: .iso8601),
-                                            timeZone: TimeZone(identifier: "CET"),
+                                            timeZone: TimeZone(secondsFromGMT: dateTimeOffset),
                                             year: 2024,
                                             month: 3,
                                             day: 28,
@@ -50,7 +51,7 @@ struct DateTimeTests {
         #expect(dateTime.hour   == dateComponents.hour)
         #expect(dateTime.minute == dateComponents.minute)
         #expect(dateTime.second == dateComponents.second)
-        #expect(dateTime.offset == 2 * 3600)
+        #expect(dateTime.offset == dateTimeOffset)
     }
 
     @Test
